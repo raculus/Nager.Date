@@ -97,6 +97,7 @@ namespace Nager.Date
                 { CountryCode.NZ, new Lazy<IPublicHolidayProvider>(() => new NewZealandProvider(_catholicProvider))},
                 { CountryCode.PA, new Lazy<IPublicHolidayProvider>(() => new PanamaProvider(_catholicProvider))},
                 { CountryCode.PE, new Lazy<IPublicHolidayProvider>(() => new PeruProvider(_catholicProvider))},
+                { CountryCode.PG, new Lazy<IPublicHolidayProvider>(() => new PapuaNewGuineaProvider(_catholicProvider))},
                 { CountryCode.PL, new Lazy<IPublicHolidayProvider>(() => new PolandProvider(_catholicProvider))},
                 { CountryCode.PR, new Lazy<IPublicHolidayProvider>(() => new PuertoRicoProvider(_catholicProvider))},
                 { CountryCode.PT, new Lazy<IPublicHolidayProvider>(() => new PortugalProvider(_catholicProvider))},
@@ -372,7 +373,7 @@ namespace Nager.Date
 
         private static Func<PublicHoliday, bool> GetPublicHolidayFilter(DateTime date, string countyCode = null)
         {
-            Func<PublicHoliday, bool> func = (o) => o.Date == date.Date
+            bool func(PublicHoliday o) => o.Date == date.Date
                 && (o.Counties == null || countyCode != null && o.Counties.Contains(countyCode))
                 && (o.LaunchYear == null || date.Year >= o.LaunchYear)
                 && o.Type.HasFlag(PublicHolidayType.Public);
@@ -432,8 +433,7 @@ namespace Nager.Date
         public static bool IsPublicHoliday(DateTime date, CountryCode countryCode, string countyCode)
         {
             var provider = GetPublicHolidayProvider(countryCode);
-            var countryProvider = provider as ICountyProvider;
-            if (countryProvider != null && !countryProvider.GetCounties().ContainsKey(countyCode))
+            if (provider is ICountyProvider countryProvider && !countryProvider.GetCounties().ContainsKey(countyCode))
             {
                 throw new ArgumentException($"Invalid countyCode {countyCode}");
             }
@@ -623,7 +623,7 @@ namespace Nager.Date
             //if it is less than zero we need to get the next week day (add 7 days)
             if (daysNeeded < 0)
             {
-                daysNeeded = daysNeeded + 7;
+                daysNeeded += 7;
             }
 
             //DayOfWeek is zero index based; multiply by the Occurance to get the day
